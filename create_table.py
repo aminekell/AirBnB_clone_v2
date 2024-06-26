@@ -1,25 +1,40 @@
+import unittest
 import MySQLdb
 
-def create_table():
-    # الاتصال بقاعدة البيانات
-    db = MySQLdb.connect(host="localhost",
-                         user="hbnb_test",
-                         passwd="hbnb_test_pwd",
-                         db="hbnb_test_db")
-    cursor = db.cursor()
+class TestMySQL(unittest.TestCase):
 
-    # إنشاء الجدول إذا لم يكن موجودًا
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS states (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL
-    );
-    """)
+    def setUp(self):
+        self.db = MySQLdb.connect(host="localhost",
+                                  user="hbnb_test",
+                                  passwd="hbnb_test_pwd",
+                                  db="hbnb_test_db")
+        self.cursor = self.db.cursor()
 
-    # إغلاق الاتصال
-    db.close()
+    def tearDown(self):
+        self.db.close()
 
-# إنشاء الجدول
-create_table()
-print("تم إنشاء الجدول بنجاح!")
+    def get_record_count(self):
+        self.cursor.execute("SELECT COUNT(*) FROM states")
+        count = self.cursor.fetchone()[0]
+        return count
+
+    def add_state(self):
+        self.cursor.execute("INSERT INTO states (name) VALUES ('California')")
+        self.db.commit()
+
+    def test_add_state(self):
+        # الحصول على عدد السجلات قبل الإضافة
+        initial_count = self.get_record_count()
+
+        # إضافة حالة جديدة
+        self.add_state()
+
+        # الحصول على عدد السجلات بعد الإضافة
+        new_count = self.get_record_count()
+
+        # التحقق من أن العدد زاد بواحدة
+        self.assertEqual(new_count, initial_count + 1)
+
+if __name__ == '__main__':
+    unittest.main()
 
